@@ -30,6 +30,7 @@ C =
 0 & -1 & 1 \\
 \end{bmatrix}
 $$
+
 ```python
 def get_incidence_matrix(G):
     """
@@ -55,6 +56,7 @@ $$ C^T = \begin{bmatrix}
 1 & -1 \\
 0 & 1 \\
 \end{bmatrix}$$
+
 ``` python
 def get_transposed_incidence_matrix(incidence_matrix):
     """
@@ -74,6 +76,7 @@ m_1 & 0\\
 0 & m_2\\
 \end{bmatrix}
 $$
+
 ```python
 def get_mass_matrix(G):
     """
@@ -87,6 +90,7 @@ def get_mass_matrix(G):
     return np.diag(masses)
 ```
 4. **Matrice diagonale des raideur $D_K$**
+
 $$
 D_K = 
 \begin{bmatrix}
@@ -95,6 +99,7 @@ k_1 & 0 & 0 \\
 0 & 0 & k_3 \\ 
 \end{bmatrix}
 $$
+
 ```python
 def get_diagonal_stiffness_matrix(G):
     """

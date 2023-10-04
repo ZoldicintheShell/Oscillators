@@ -187,18 +187,22 @@ $$ A = \begin{bmatrix}
 \frac{-k_2}{m2} & \frac{k_2+k_3}{m2}\\
 \end{bmatrix} $$
 ```python
-def calculate_state_matrix(M, K,C)
-""" Calculate the state matrix (A) of the system. Parameters: - M: The mass matrix of the system. - K: The stiffness matrix of the system. - C: The damping matrix of the system. Returns the state matrix (A). 
-"""
-	if np.linalg.det(M) != 0:  # If the mass matrix is invertible
-	        M_inverse = np.linalg.inv(M)
-	        print(M_inverse)
-	        A = M_inverse @ (K + C)  # Add the damping matrix to the system
-	        print(A)
-			return A
-	else:
-	  print("\nMass Matrix M is not invertible. The system cannot be solved.")
-	  return 0
+def calculate_state_matrix(M, K, C):
+    """
+    Calculate the state matrix (A) of the system.
+    Parameters:
+    - M: The mass matrix of the system.
+    - K: The stiffness matrix of the system.
+    - C: The damping matrix of the system.
+    Returns the state matrix (A).
+    """
+    if np.linalg.det(M) != 0:  # If the mass matrix is invertible
+        M_inverse = np.linalg.inv(M)
+        A = M_inverse @ K  # Add the damping matrix to the system
+        return A
+    else:
+        print("\nMass Matrix M is not invertible. The system cannot be solved.")
+        return None
 ```
 1. On obtient l'équation du mouvement:
 $$\ddot{X} = A.X$$

@@ -427,14 +427,20 @@ def main():
     stable, unstable = find_equilibrium_positions_Jacob(M, A)
     frequencies = calculate_oscillation_frequencies(M, K)
     
+
     show_graph(G)
-    print("Equilibrium Positions:\n", equilibrium_positions_Test_1)
-    print("Equilibrium Positions 2 option:\n", equilibrium_positions_Test_2)
+    print("\nIncidence Matrix ϕ :\n", ϕ )
+    print("\nDiagonal Stiffness Matrik D_K:\n",D_K)
+    print("\nStiffness Matrix K:\n",K)
+    print("\nMass MAtrix M:\n", M)
+    print("\nState Matrix Representation A:\n",A)
+    print("\nEquilibrium Positions:\n", equilibrium_positions_Test_1)
+    print("\nEquilibrium Positions 2 option:\n", equilibrium_positions_Test_2)
 
 
     # ======== Stability Equilibrium position analysis 
 
-    print("Stable Equilibrium Positions:\n")
+    print("\nStable Equilibrium Positions:")
     for position in stable:
       print(position)
 

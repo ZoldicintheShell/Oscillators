@@ -23,11 +23,11 @@ On considère deux blocs de masses respectives m1 et m2 liés l'un à l'autre pa
 
 
 1. **Matrice d'incidence $C$**
-$$C = 
+$C = 
 \begin{bmatrix}
 -1 & 1 & 0\\
 0 & -1 & 1 \\
-\end{bmatrix}$$
+\end{bmatrix}$
 
 ```python
 def get_incidence_matrix(G):

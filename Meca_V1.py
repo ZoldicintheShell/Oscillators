@@ -415,14 +415,14 @@ def find_equilibrium_positions_Jacob(M, A):
     unstable_equilibria = []
 
     for eigenvalue in eigenvalues:
-        if np.real(eigenvalue) < 0:
+        if np.real(eigenvalue) <= 0:
             stable_equilibria.append(np.real(eigenvalue))
         elif np.real(eigenvalue) > 0:
             unstable_equilibria.append(np.real(eigenvalue))
-
+    #print("number of eigenvalue", len(eigenvalues))
     return stable_equilibria, unstable_equilibria
 
-#========================== CREATION OF GRAPH (G)
+#========================== SUBSTITUTE MATRIX (G)
 def substitute_matrix(G, A):
     """
     Substitute the unknowns in A with the corresponding values
@@ -451,6 +451,7 @@ def substitute_matrix(G, A):
             except:
                 out[i][j] = A[i][j]
     return out
+
 #========================== CREATION OF GRAPH (G)
 def create_graph():
     """
@@ -465,26 +466,18 @@ def create_graph():
     m5 = 5
 
     # Add 3 nodes to the graph with assigned values
-    G.add_node(0, node_name="M0", node_value=m1)
-    G.add_node(1, node_name="M1", node_value=m2)
-    G.add_node(2, node_name="M2", node_value=m3)
-    G.add_node(3, node_name="M3", node_value=m4)
-    G.add_node(4, node_name="M4", node_value=m5)
+    G.add_node(0, node_name = "M0", node_value = m1)
+    G.add_node(1, node_name = "M1", node_value = m2)
+    G.add_node(2, node_name = "M2", node_value = m3)
+
 
     # Add weighted edges to the graph based on the stiffness matrix
     G.add_edge(0, 1, k = 1.0)
     G.add_edge(1, 0, k = 1.0)
     G.add_edge(1, 2, k = 2.0)
     G.add_edge(2, 1, k = 2.0)
-    G.add_edge(3, 1, k = 3.0)
-    G.add_edge(4, 1, k = 3.0)
 
     return G
-
-
-
-
-
 
 
 
@@ -501,21 +494,24 @@ def main():
 
     ϕ = get_incidence_matrix(G)
 
+    #Symbols values
     s_D_K = sym_get_diagonal_stiffness_matrix(G)
     s_K = sym_calculate_stiffness_matrix(ϕ, s_D_K)
     s_M = sym_get_mass_matrix(G)
     s_A = sym_calculate_state_matrix(s_M, s_K, ϕ)
 
+    #Reel Values
     M = substitute_matrix(G, s_M)
     if np.linalg.det(M) == 0:
         raise "Matrix M not inversible"
     K = substitute_matrix(G, s_K)
     A = substitute_matrix(G, s_A)
-
+    print("--------------\n",M)
+    print("--------------\n",A)
     t, X = solve_system_dynamics(G, initial_positions, initial_velocities, time_span, num_points)
 
-    equilibrium_positions_Test_1 = find_equilibrium_position(G)
-    equilibrium_positions_Test_2 = find_equilibrium(A, gravity=0)
+    #equilibrium_positions_Test_1 = find_equilibrium_position(G)
+    #equilibrium_positions_Test_2 = find_equilibrium(A, gravity=0)
     stable, unstable = find_equilibrium_positions_Jacob(M, A)
     frequencies = calculate_oscillation_frequencies(M, K)
     
@@ -525,8 +521,8 @@ def main():
     print("\nStiffness Matrix s_K:\n", s_K)
     print("\nMass Matrix M:\n", s_M)
     print("\nState Matrix Representation A:\n", s_A)
-    print("\nEquilibrium Positions:\n", equilibrium_positions_Test_1)
-    print("\nEquilibrium Positions 2 option:\n", equilibrium_positions_Test_2)
+    #print("\nEquilibrium Positions:\n", equilibrium_positions_Test_1)
+    #print("\nEquilibrium Positions 2 option:\n", equilibrium_positions_Test_2)
 
 
     # ======== Stability Equilibrium position analysis 

@@ -176,6 +176,17 @@ def get_mass_matrix(G):
     masses = list(node_value.values())
     return np.diag(masses)
 
+def sym_get_mass_matrix(G):
+    """
+    Get the mass matrix of the system based on node values from a given graph.
+    Parameters:
+    - G: The input graph representing the physical system.
+    Returns the diagonal mass matrix.
+    """
+    node_value = [sp.symbols(f'm{i}') for i in range(1, len(G.nodes()) + 1)]
+    masses = list(node_value)
+    return np.diag(masses)
+
 #========================== GET MASS MATRIX (D_K)
 def get_diagonal_stiffness_matrix(G):
     """
@@ -188,7 +199,38 @@ def get_diagonal_stiffness_matrix(G):
     return np.diag(list(raideurs.values()))    
 
 #========================== GET STIFNESS MATRIX (K)
+def sym_get_diagonal_stiffness_matrix(G):
+    """
+    Get the diagonal stiffness matrix of the system based on edge weights from a given graph.
+    Parameters:
+    - G: The input graph representing the physical system.
+    Returns the diagonal stiffness matrix (D_K) .
+    """
+    raideurs = [sp.symbols(f'k{i}') for i in range(1, len(G.edges())+1)]
+    return np.diag(raideurs)    
+
+#========================== GET STIFNESS MATRIX (K)
 def calculate_stiffness_matrix(incidence_matrix, diagonal_stiffness_matrix):
+    """
+    Calculate the stiffness matrix of the system.
+    Parameters:
+    - incidence_matrix: The incidence matrix of the system.
+    - diagonal_stiffness_matrix: The diagonal stiffness matrix.
+    Returns the stiffness matrix(K).
+    """
+    return np.dot(np.dot(incidence_matrix.T, diagonal_stiffness_matrix), incidence_matrix)
+
+def sym_calculate_stiffness_matrix(incidence_matrix, diagonal_stiffness_matrix):
+    """
+    Calculate the stiffness matrix of the system.
+    Parameters:
+    - incidence_matrix: The incidence matrix of the system.
+    - diagonal_stiffness_matrix: The diagonal stiffness matrix.
+    Returns the stiffness matrix(K).
+    """
+    return np.dot(np.dot(incidence_matrix.T, diagonal_stiffness_matrix), incidence_matrix)
+
+def sym_calculate_stiffness_matrix(incidence_matrix, diagonal_stiffness_matrix):
     """
     Calculate the stiffness matrix of the system.
     Parameters:
@@ -210,11 +252,27 @@ def calculate_state_matrix(M, K, C):
     """
     if np.linalg.det(M) != 0:  # If the mass matrix is invertible
         M_inverse = np.linalg.inv(M)
-        A = M_inverse @ -K  # Add the damping matrix to the system
+        A = np.dot(M_inverse, -K) # Add the damping matrix to the system
         return A
     else:
         print("\nMass Matrix M is not invertible. The system cannot be solved.")
         return None
+
+def sym_calculate_state_matrix(M, K, C):
+    """
+    Calculate the state matrix (A) of the system.
+    Parameters:
+    - M: The mass matrix of the system.
+    - K: The stiffness matrix of the system.
+    - C: The damping matrix of the system.
+    Returns the state matrix (A).
+    """
+#   np.linalg.det(M) != 0 test if the matrix is invertible
+    M_tmp = sp.Matrix(M).inv()
+    M_inverse = np.array(M_tmp.tolist()) # Inverse the keeps the symbols
+#    M_inverse = np.linalg.inv(M)
+    A = np.dot(M_inverse, -K) # Add the damping matrix to the system
+    return A
 
 #========================== GET OSCILLATION FREQUENCIES ✅
 def calculate_oscillation_frequencies(M, K):
@@ -364,7 +422,35 @@ def find_equilibrium_positions_Jacob(M, A):
 
     return stable_equilibria, unstable_equilibria
 
-
+#========================== CREATION OF GRAPH (G)
+def substitute_matrix(G, A):
+    """
+    Substitute the unknowns in A with the corresponding values
+    Parameters:
+    - G: The input graph representing the physical system.
+    - A: The symbols matrix
+    Returns substituted matrix
+    """
+    out = np.empty(A.shape)
+    substitution_dict = dict()
+    i = 1
+# Load stiffness values to substitution dict
+    for k in nx.get_edge_attributes(G, "k").values(): 
+        substitution_dict[f'k{i}'] = k
+        i += 1
+    i = 1
+# Load mass values to substitution dict
+    for m in nx.get_node_attributes(G, "node_value").values():
+        substitution_dict[f'm{i}'] = m
+        i += 1
+    print('Substitution dict:\n', substitution_dict)
+    for i in range(len(A)):
+        for j in range(len(A[i])):
+            try :
+                out[i][j] = A[i][j].subs(substitution_dict)
+            except:
+                out[i][j] = A[i][j]
+    return out
 #========================== CREATION OF GRAPH (G)
 def create_graph():
     """
@@ -397,38 +483,48 @@ def create_graph():
 
 
 
+
+
+
+
+
 def main():
 
+    G = create_graph()  # Assuming you have a function to create the graph
+    nodes_number = len(G.nodes())
     #----------------- TO DEFINE ----------------------------------------------
-    initial_positions   = np.array([1.0, 2.0, 3.0, 4.0, 5.0])  # Initial positions
-    initial_velocities  = np.array([1.0, 0.0, 0.0, 0.0, 0.0])  # Initial velocities
+    initial_positions   = np.array([i for i in range(nodes_number)])  # Initial positions vector size nodes_number
+    initial_velocities  = np.array([0.0 for _ in range(nodes_number)])  # Initial velocities vector size node_number
     time_span           = [0, 10]  # Time span for simulation
     num_points          = 100  # Number of time points
     #--------------------------------------------------------------------------
 
-    G = create_graph()  # Assuming you have a function to create the graph
-
     ϕ = get_incidence_matrix(G)
-    D_K = get_diagonal_stiffness_matrix(G)
-    K = calculate_stiffness_matrix(ϕ, D_K)
-    M = get_mass_matrix(G)
-    A = calculate_state_matrix(M, K, ϕ)
+
+    s_D_K = sym_get_diagonal_stiffness_matrix(G)
+    s_K = sym_calculate_stiffness_matrix(ϕ, s_D_K)
+    s_M = sym_get_mass_matrix(G)
+    s_A = sym_calculate_state_matrix(s_M, s_K, ϕ)
+
+    M = substitute_matrix(G, s_M)
+    if np.linalg.det(M) == 0:
+        raise "Matrix M not inversible"
+    K = substitute_matrix(G, s_K)
+    A = substitute_matrix(G, s_A)
 
     t, X = solve_system_dynamics(G, initial_positions, initial_velocities, time_span, num_points)
-
 
     equilibrium_positions_Test_1 = find_equilibrium_position(G)
     equilibrium_positions_Test_2 = find_equilibrium(A, gravity=0)
     stable, unstable = find_equilibrium_positions_Jacob(M, A)
     frequencies = calculate_oscillation_frequencies(M, K)
     
-
     show_graph(G)
     print("\nIncidence Matrix ϕ :\n", ϕ )
-    print("\nDiagonal Stiffness Matrik D_K:\n",D_K)
-    print("\nStiffness Matrix K:\n",K)
-    print("\nMass MAtrix M:\n", M)
-    print("\nState Matrix Representation A:\n",A)
+    print("\nDiagonal Stiffness Matrix s_D_K:\n", s_D_K)
+    print("\nStiffness Matrix s_K:\n", s_K)
+    print("\nMass Matrix M:\n", s_M)
+    print("\nState Matrix Representation A:\n", s_A)
     print("\nEquilibrium Positions:\n", equilibrium_positions_Test_1)
     print("\nEquilibrium Positions 2 option:\n", equilibrium_positions_Test_2)
 

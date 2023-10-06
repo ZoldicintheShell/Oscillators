@@ -210,7 +210,7 @@ def calculate_state_matrix(M, K, C):
     """
     if np.linalg.det(M) != 0:  # If the mass matrix is invertible
         M_inverse = np.linalg.inv(M)
-        A = M_inverse @ K  # Add the damping matrix to the system
+        A = M_inverse @ -K  # Add the damping matrix to the system
         return A
     else:
         print("\nMass Matrix M is not invertible. The system cannot be solved.")
@@ -397,11 +397,6 @@ def create_graph():
 
 
 
-
-
-
-
-
 def main():
 
     #----------------- TO DEFINE ----------------------------------------------
@@ -441,8 +436,8 @@ def main():
     # ======== Stability Equilibrium position analysis 
 
     print("\nStable Equilibrium Positions:")
-    for position in stable:
-      print(position)
+    for position in range(len(stable)):
+        print("Node {}: {:.15f}".format(position+1, stable[position]))
 
     print("\nUnstable Equilibrium Positions:")
     for position in range(len(unstable)):
